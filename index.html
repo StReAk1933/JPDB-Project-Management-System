@@ -1,0 +1,264 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Project Management Form</title>
+
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+
+    <script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
+
+    <script src="https://login2explore.com/jpdb/resources/js/0.0.3/jpdb-commons.js"></script>
+</head>
+<body>
+
+<div class="container mt-5">
+    <div class="card shadow">
+        <div class="card-header bg-primary text-white">
+            <h3>Project Management Form</h3>
+        </div>
+
+        <div class="card-body">
+
+            <div class="mb-3">
+                <label>Project ID</label>
+                <input type="text" id="projectId" class="form-control">
+            </div>
+
+            <div class="mb-3">
+                <label>Project Name</label>
+                <input type="text" id="projectName" class="form-control">
+            </div>
+
+            <div class="mb-3">
+                <label>Assigned To</label>
+                <input type="text" id="assignedTo" class="form-control">
+            </div>
+
+            <div class="mb-3">
+                <label>Assignment Date</label>
+                <input type="date" id="assignmentDate" class="form-control">
+            </div>
+
+            <div class="mb-3">
+                <label>Deadline</label>
+                <input type="date" id="deadline" class="form-control">
+            </div>
+
+            <button class="btn btn-success" id="saveBtn">Save</button>
+            <button class="btn btn-warning" id="updateBtn">Update</button>
+            <button class="btn btn-secondary" id="resetBtn">Reset</button>
+
+        </div>
+    </div>
+</div>
+<script>
+
+const connToken = "90935128|-31949240985127131|90903755";
+
+const dbName = "COLLEGE-DB";
+const relName = "PROJECT-TABLE";
+
+const jpdbBaseUrl = "http://api.login2explore.com:5577";
+const jpdbImlUrl = "/api/iml";
+const jpdbIrlUrl = "/api/irl";
+
+let recNo = null;
+
+$(document).ready(function () {
+
+    $("#projectName").prop("disabled", true);
+    $("#assignedTo").prop("disabled", true);
+    $("#assignmentDate").prop("disabled", true);
+    $("#deadline").prop("disabled", true);
+
+    $("#saveBtn").prop("disabled", true);
+    $("#updateBtn").prop("disabled", true);
+    $("#resetBtn").prop("disabled", true);
+    $("#saveBtn").click(saveData);
+    $("#updateBtn").click(updateData);
+    $("#resetBtn").click(resetForm);
+
+});
+
+$("#projectId").blur(function () {
+    checkProjectId();
+});
+
+function checkProjectId() {
+
+    let projectId = $("#projectId").val();
+
+    if (projectId === "") {
+        return;
+    }
+
+    let jsonObj = {
+        ProjectID: projectId
+    };
+
+    let getRequest = createGET_BY_KEYRequest(
+        connToken,
+        dbName,
+        relName,
+        JSON.stringify(jsonObj)
+    );
+
+    jQuery.ajaxSetup({async:false});
+
+    let resultObj = executeCommandAtGivenBaseUrl(
+        getRequest,
+        jpdbBaseUrl,
+        jpdbIrlUrl
+    );
+
+    jQuery.ajaxSetup({async:true});
+
+    if (resultObj.status === 200) {
+
+    let data = JSON.parse(resultObj.data).record;
+
+    recNo = JSON.parse(resultObj.data).rec_no;
+
+    $("#projectName").val(data.ProjectName);
+    $("#assignedTo").val(data.AssignedTo);
+    $("#assignmentDate").val(data.AssignmentDate);
+    $("#deadline").val(data.Deadline);
+
+    $("#projectId").prop("disabled", true);
+
+    $("#projectName").prop("disabled", false);
+    $("#assignedTo").prop("disabled", false);
+    $("#assignmentDate").prop("disabled", false);
+    $("#deadline").prop("disabled", false);
+
+    $("#saveBtn").prop("disabled", true);
+    $("#updateBtn").prop("disabled", false);
+    $("#resetBtn").prop("disabled", false);
+
+}
+else {
+
+    $("#projectName").prop("disabled", false);
+    $("#assignedTo").prop("disabled", false);
+    $("#assignmentDate").prop("disabled", false);
+    $("#deadline").prop("disabled", false);
+
+    $("#saveBtn").prop("disabled", false);
+    $("#updateBtn").prop("disabled", true);
+    $("#resetBtn").prop("disabled", false);
+
+    $("#projectName").focus();
+}
+}
+
+function saveData() {
+    if (
+    $("#projectName").val() === "" ||
+    $("#assignedTo").val() === "" ||
+    $("#assignmentDate").val() === "" ||
+    $("#deadline").val() === ""
+) {
+    alert("All fields are required!");
+    return;
+}
+
+    let jsonObj = {
+        ProjectID: $("#projectId").val(),
+        ProjectName: $("#projectName").val(),
+        AssignedTo: $("#assignedTo").val(),
+        AssignmentDate: $("#assignmentDate").val(),
+        Deadline: $("#deadline").val()
+    };
+
+    let putRequest = createPUTRequest(
+        connToken,
+        JSON.stringify(jsonObj),
+        dbName,
+        relName
+    );
+
+    jQuery.ajaxSetup({async:false});
+
+    let resultObj = executeCommandAtGivenBaseUrl(
+        putRequest,
+        jpdbBaseUrl,
+        jpdbImlUrl
+    );
+
+    jQuery.ajaxSetup({async:true});
+
+    alert("Project Saved Successfully!");
+
+    resetForm();
+}
+
+function updateData() {
+    if (
+    $("#projectName").val() === "" ||
+    $("#assignedTo").val() === "" ||
+    $("#assignmentDate").val() === "" ||
+    $("#deadline").val() === ""
+) {
+    alert("All fields are required!");
+    return;
+}
+
+    let jsonObj = {
+        ProjectID: $("#projectId").val(),
+        ProjectName: $("#projectName").val(),
+        AssignedTo: $("#assignedTo").val(),
+        AssignmentDate: $("#assignmentDate").val(),
+        Deadline: $("#deadline").val()
+    };
+
+    let updateRequest = createUPDATERecordRequest(
+        connToken,
+        JSON.stringify(jsonObj),
+        dbName,
+        relName,
+        recNo
+    );
+
+    jQuery.ajaxSetup({async:false});
+
+    let resultObj = executeCommandAtGivenBaseUrl(
+        updateRequest,
+        jpdbBaseUrl,
+        jpdbImlUrl
+    );
+
+    jQuery.ajaxSetup({async:true});
+
+    alert("Project Updated Successfully!");
+
+    resetForm();
+}
+
+function resetForm() {
+
+    $("#projectId").val("");
+    $("#projectName").val("");
+    $("#assignedTo").val("");
+    $("#assignmentDate").val("");
+    $("#deadline").val("");
+
+    $("#projectId").prop("disabled", false);
+
+    $("#projectName").prop("disabled", true);
+    $("#assignedTo").prop("disabled", true);
+    $("#assignmentDate").prop("disabled", true);
+    $("#deadline").prop("disabled", true);
+
+    $("#saveBtn").prop("disabled", true);
+    $("#updateBtn").prop("disabled", true);
+    $("#resetBtn").prop("disabled", true);
+
+    $("#projectId").focus();
+}
+
+</script>
+
+</body>
+</html>
